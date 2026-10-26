@@ -1,0 +1,26 @@
+name: build-dylib
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip project
+        run: unzip -o DouyinHelper_iosproj.zip -d iosproj
+      - name: Setup Theos
+        run: |
+          brew install ldid
+          git clone --recursive --depth 1 https://github.com/theos/theos.git "$HOME/theos"
+          git clone --depth 1 https://github.com/theos/sdks.git "$HOME/theos/sdks"
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+      - name: Build
+        run: |
+          cd iosproj
+          make clean all
+          find .theos -name '*.dylib' -print
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DouyinHelper-dylib
+          path: iosproj/.theos/**/*.dylib
